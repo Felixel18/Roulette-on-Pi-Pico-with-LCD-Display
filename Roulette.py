@@ -238,7 +238,7 @@ class RouletteTable():
         self.ResNumber=random.choices(self.RouletteNumbers,self.RouletteChances)
 
     def DisplayResult(self):
-        print("The ball landed on the "+str(self.ResNumber)[0]+"!")
+        print("The ball landed on the "+str(self.ResNumber[0])+"!")
     def Bet_payout(self):
         print("Wow! You won!")
         Win=self.stake*self.Bet_PayoutList[self.BetType]
@@ -263,7 +263,7 @@ class RouletteTable():
         if debug:
             print(self.ResNumber    )
             print(self.BetType)
-        if self.ResNumber in self.Bet_WinningNumber_List:
+        if self.ResNumber[0] in self.Bet_WinningNumber_List:
             self.Bet_payout()
         else:
             self.Bet_LooseMessage()
