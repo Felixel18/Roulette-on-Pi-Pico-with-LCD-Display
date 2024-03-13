@@ -235,10 +235,10 @@ class RouletteTable():
     
     def TurnTheTable(self):
         self.ResNumber=-1
-        self.ResNumber=random.choice(self.RouletteNumbers,self.RouletteChances)
+        self.ResNumber=random.choices(self.RouletteNumbers,self.RouletteChances)
 
     def DisplayResult(self):
-        print("The ball landed on the "+str(self.ResNumber)+"!")
+        print("The ball landed on the "+str(self.ResNumber)[0]+"!")
     def Bet_payout(self):
         print("Wow! You won!")
         Win=self.stake*self.Bet_PayoutList[self.BetType]
