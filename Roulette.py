@@ -1,4 +1,5 @@
 import random
+import sys
 debug=True
 class RouletteTable():
     def __init__(self):
@@ -10,9 +11,9 @@ class RouletteTable():
             #European Layout Based on https://casinoalpha.com/wp-content/uploads/2023/06/1.European-Wheel-Design-1-1024x855.png
             self.RouletteNumbers=EuropeanLayout_numbers
             self.RouletteChances=EuropeanLayout_chances
-        self.stake=0
-        self.UserMoney=100 #TODO
-        self.BetType=0
+        self.stake=[]
+        self.UserMoney=100
+        self.BetType=[]
         self.ResNumber=-1
         self.Bet_TypeList=["Empty",#Resets for extra bug-proof
                       #Inside Bets
@@ -32,7 +33,7 @@ class RouletteTable():
                       "Odd"
                       ]
         self.Bet_WinningNumber_List=[]
-        self.Bet_PayoutList=[0,35,17,11,8,6,6,2,2,1,1,1]
+        self.Bet_PayoutList=[0,35,17,11,8,6,6,2,2,1,1,1,1,1]
         #Source of Payouts: https://www.venetianlasvegas.com/casino/table-games/roulette-basic-rules.html
         
         #AllNumbers_Count=len(EuropeanLayout_chances)
@@ -45,7 +46,9 @@ class RouletteTable():
         """
     def Bet_stake(self):
         ChipsList=[1,5,10,25,50,100,200,500]
-        #TODO: Raspi Layout, Multiple Chips, 
+        if self.UserMoney==0:
+            print("You are out of credits. Leave and restart/ask the owner for more.") 
+            sys.exit()
         print(" You got "+str(self.UserMoney)+" credits.  How much do you want to bet?\nYou can Bet Chips of 1,5,10,25,50,100,200 or 500.")
         while True:
             stake=(input().lower()).replace("credits","").replace(" ","").replace("c","")
@@ -65,8 +68,12 @@ class RouletteTable():
                 print("Please enter a valid stake.")
             else:
                 print("There we go! "+str(stake)+" credits are on the line.")
-                self.stake=stake
+                self.stake.append(stake)
+                self.UserMoney-=stake
                 break
+    
+
+
     #Access Dictionary with bet numbers
     def BetAccess(self, BetNumberMade):
         #For understanding view European_Numbered_Final4.pdf
@@ -148,7 +155,7 @@ class RouletteTable():
                     76:(13, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36]) ,
                     #Top Line Bet war versehentlich doppelt und wurde durch 152 ersetzt
                     152:(5, [0,1,2,3]) ,
-                    77:(12, [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34]) ,
+                    77:(10, [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34]) ,
                     78:(11, [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35,]),
                     79:(12,[1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, ] ) ,
                     80:( 9, [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]) ,
@@ -227,8 +234,8 @@ class RouletteTable():
                     }
         BetSet=AccessDict[BetNumberMade]
         
-        self.Bet_WinningNumber_List=BetSet[1]
-        self.BetType=BetSet[0]
+        self.Bet_WinningNumber_List.append(BetSet[1])
+        self.BetType.append(BetSet[0])
         if debug:
             print(self.Bet_WinningNumber_List)
             print(self.BetType)
@@ -239,50 +246,94 @@ class RouletteTable():
 
     def DisplayResult(self):
         print("The ball landed on the "+str(self.ResNumber[0])+"!")
-    def Bet_payout(self):
+    def Bet_payout(self, WinningBet):
         print("Wow! You won!")
-        Win=self.stake*self.Bet_PayoutList[self.BetType]
+        Win=self.stake[WinningBet]*self.Bet_PayoutList[self.BetType[WinningBet]]
         print("You get your stake back plus "+str(Win)+ " credits.")    
         self.UserMoney+=Win
-        self.stake=0
-        self.BetType=0
-        self.Bet_WinningNumber_List=[]
+        self.UserMoney+=self.stake[WinningBet]
+        self.stake[WinningBet]=0
+        self.BetType[WinningBet]=0
+        self.Bet_WinningNumber_List[WinningBet]=[]
         self.ResNumber=-1
         
-    def Bet_LooseMessage(self):
+    def Bet_LooseAllMessage(self):
         print("I'm sorry, you lost.")
-        print("Your stake of "+str(self.stake)+" credits is gone.")
-        self.UserMoney=self.UserMoney-self.stake
-        self.stake=0
-        self.BetType=0
+        sumOfLoose=0
+        for loose in self.stake: sumOfLoose+=loose
+        print("All your stake of entire "+str(sumOfLoose)+" credits is gone.")
+        self.stake=[]
+        self.BetType=[]
         self.Bet_WinningNumber_List=[]
         self.ResNumber=-1
         print("There are "+str(self.UserMoney)+" credits on your account.")
 
+    def Bet_PartialLostLeft(self):
+        print("You won a bit and lost a bit.")
+        sumOfLoose=0
+        for loose in self.stake: 
+            if loose!=[]: sumOfLoose+=loose
+        print("The leftover stakes of "+str(sumOfLoose)+" credits is gone.")
+        self.stake=[]
+        self.BetType=[]
+        self.Bet_WinningNumber_List=[]
+        self.ResNumber=-1
+        print("There are "+str(self.UserMoney)+" credits on your account.")
+        
+
     def WinOrLoose(self):
         if debug:
-            print(self.ResNumber    )
+            print(self.ResNumber)
             print(self.BetType)
-        if self.ResNumber[0] in self.Bet_WinningNumber_List:
-            self.Bet_payout()
+        winCount=0
+        for CurrentWinningNumbersIndex in range(len(self.Bet_WinningNumber_List)):
+            CurrentWinningNumbers=self.Bet_WinningNumber_List[CurrentWinningNumbersIndex]
+            if self.ResNumber[0] in CurrentWinningNumbers:
+                self.Bet_payout(CurrentWinningNumbersIndex)
+                winCount+=1
+            
+        if winCount==0:
+            self.Bet_LooseAllMessage()
+        elif winCount<len(self.Bet_WinningNumber_List)-1:
+            self.Bet_PartialLostLeft()
         else:
-            self.Bet_LooseMessage()
-    
-    def Bet_ChooseAndStake(self):
+            self.stake=[]
+            self.ResNumber=-1
+            self.Bet_WinningNumber_List=[]    
+    def Bet_ChooseAndStake_once(self):
         self.Bet_stake()
         while True:
-            AccessNum=int(input("Insert number between 1-151"))
+            AccessNum=int(input("Insert number between 1-151. "))
             if (AccessNum > 0 and AccessNum <=151):
                 break
             else:
                 print("Enter valid number please. For more information, seek the infographic.")
         self.BetAccess(AccessNum)
+    def Bet_ChooseAndStake_multiple(self):
+        againBool=True
+        while True:
+            if againBool:
+                self.Bet_ChooseAndStake_once()
+                againBool=False
+            if self.UserMoney<1:
+                print("You bet all your money. Let the game begin!")
+                break
+            else:
+                again=input("Do you want to set another chip? (yes/no) \n")
+                if again.lower()=="y" or again.lower()=="yes":
+                    againBool=True
+                elif again.lower()=="n" or again.lower()=="no":
+                    break
+                else:
+                    print("Please answer with yes or no.")
+                
+                
 newTable=RouletteTable()
-newTable.Bet_ChooseAndStake()
-newTable.TurnTheTable()
-#newTable.ResNumber=0
-newTable.DisplayResult()
-newTable.WinOrLoose()
+while True:
+    newTable.Bet_ChooseAndStake_multiple()
+    newTable.TurnTheTable()
+    newTable.DisplayResult()
+    newTable.WinOrLoose()
 
 """
 #Skript to generate number rows
