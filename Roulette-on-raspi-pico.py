@@ -124,7 +124,7 @@ class NumberField():
                 self.CurrentNumber[LastBlockedIndex+1]=ClickedItem
 
     #Credit to sage071920 on github for the lcd values
-    #Modification to meet cursor expectation
+    #But my own modifications to meet my cursor expectations
     def handle_joystick_input(self):
         # Read analog values from the joystick
         x_value = self.joystick_x_pin.read_u16()
@@ -177,7 +177,8 @@ class NumberField():
             return "EMPTY"
         else:
             return int(CurrentStr)
-        
+
+#The original roulette function, cut up and partially changed inside RouletteOnPiPico     
 class RouletteTable():
     def __init__(self):
         #Individual chances to allow later changes for fairness.
@@ -393,6 +394,7 @@ class RouletteTable():
         #self.ResNumber=random.choices(self.RouletteNumbers,self.RouletteChances)
         self.ResNumber=random.choice(self.RouletteNumbers)
 
+#Class to use the original roulette script in combination with the numpad script on a rasberry 
 class RouletteOnPiPico():
     def __init__(self):
         self.Numpad=NumberField()
@@ -444,6 +446,7 @@ class RouletteOnPiPico():
                 sleep_ms(2000)
 
                 break
+
     def DisplayResult(self):
         self.Numpad.lcd.clear()        
         #self.Numpad.lcd.putstr("The ball landed on  the "+str(self.rouletteTable.ResNumber[0])+"!")
@@ -547,7 +550,8 @@ class RouletteOnPiPico():
                 again=self.Numpad.ContinuosRequest()
                 if again=="EMPTY":
                     break
-        
+    
+    #Function asks if the user wants to play again.
     def PlayAgain(self):
         self.Numpad.lcd.clear()
         self.Numpad.lcd.putstr("Do you want to play another round?      (enter number=yes)  (enter empty=no)")
@@ -561,6 +565,7 @@ class RouletteOnPiPico():
         else:
             return
 
+    #Continous round with PlayAgain() to ask if the user wants to quit.
     def KeepPlaying(self):
         while True:
             self.Bet_ChooseAndStake_multiple()
